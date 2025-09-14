@@ -2,7 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Application, extend } from '@pixi/react';
 import * as PIXI from 'pixi.js';
 import MobileSpinningGrid from './components/MobileSpinningGrid';
-import spriteUrl from './components/sprites/sprite.png';
+import sprite1 from './components/sprites/UkrainianSprites/1.png';
+import sprite2 from './components/sprites/UkrainianSprites/2.png';
+import sprite3 from './components/sprites/UkrainianSprites/3.png';
+import sprite4 from './components/sprites/UkrainianSprites/4.png';
+import sprite5 from './components/sprites/UkrainianSprites/5.png';
+import sprite6 from './components/sprites/UkrainianSprites/6.png';
 import './App.css';
 
 // Extend tells @pixi/react what Pixi.js components are available
@@ -18,41 +23,36 @@ const Graphics = 'Graphics' as any;
 const Sprite = 'Sprite' as any;
 const Text = 'Text' as any;
 
-const sprites = ['dragon_red', 'dragon_green', 'dragon_gold', 'dragon_blue', 'star', 'diamond', 'seven', 'bar', 'cherry', 'lemon', 'bell', 'spin'];
+const sprites = ['ukrainian1', 'ukrainian2', 'ukrainian3', 'ukrainian4', 'ukrainian5', 'ukrainian6'];
 
-// Create sprite textures using proper PIXI v8 Assets system
-const createSpriteTextures = async () => {
-  // Load the base spritesheet through Assets system
-  const base = await PIXI.Assets.load(spriteUrl);
-  const baseTexture = base.baseTexture || base;
-
-  // Create sub-textures and register them with Assets for global access
-  const spriteDefinitions = [
-    { name: 'dragon_red', x: 0, y: 0 },
-    { name: 'dragon_green', x: 256, y: 0 },
-    { name: 'dragon_gold', x: 512, y: 0 },
-    { name: 'dragon_blue', x: 768, y: 0 },
-    { name: 'star', x: 0, y: 256 },
-    { name: 'diamond', x: 256, y: 256 },
-    { name: 'seven', x: 512, y: 256 },
-    { name: 'bar', x: 768, y: 256 },
-    { name: 'cherry', x: 0, y: 512 },
-    { name: 'lemon', x: 256, y: 512 },
-    { name: 'bell', x: 512, y: 512 },
-    { name: 'spin', x: 768, y: 512 }
+// Load Ukrainian sprites using proper PIXI v8 Assets system
+const loadUkrainianSprites = async () => {
+  const spriteFiles = [
+    { name: 'ukrainian1', url: sprite1 },
+    { name: 'ukrainian2', url: sprite2 },
+    { name: 'ukrainian3', url: sprite3 },
+    { name: 'ukrainian4', url: sprite4 },
+    { name: 'ukrainian5', url: sprite5 },
+    { name: 'ukrainian6', url: sprite6 }
   ];
 
-  // Create and register each sprite texture
-  spriteDefinitions.forEach(({ name, x, y }) => {
-    const texture = new PIXI.Texture({
-      source: baseTexture.source,
-      frame: new PIXI.Rectangle(x, y, 256, 256)
-    });
-    // Register with Assets cache for global access
+  // Load each sprite individually and register with Assets cache
+  for (const { name, url } of spriteFiles) {
+    const texture = await PIXI.Assets.load(url);
+    // Register with Assets cache for global access via Texture.from()
     PIXI.Assets.cache.set(name, texture);
-  });
+    console.log(`Loaded Ukrainian sprite: ${name}`, texture);
+  }
 
-  console.log('Sprite textures created and registered globally');
+  console.log('All Ukrainian sprites loaded and registered globally');
+  
+  // Test if Texture.from() works
+  try {
+    const testTexture = PIXI.Texture.from('ukrainian1');
+    console.log('Texture.from test successful:', testTexture.valid);
+  } catch (error) {
+    console.error('Texture.from test failed:', error);
+  }
 };
 
 function App() {
@@ -62,14 +62,14 @@ function App() {
   const [texturesLoaded, setTexturesLoaded] = useState(false);
   const parentRef = useRef<HTMLDivElement>(null);
 
-  // Load textures using proper PIXI v8 Assets system
+  // Load Ukrainian sprites using proper PIXI v8 Assets system
   useEffect(() => {
     const loadTextures = async () => {
       try {
-        await createSpriteTextures();
+        await loadUkrainianSprites();
         setTexturesLoaded(true);
       } catch (error) {
-        console.error('App: Failed to load textures:', error);
+        console.error('App: Failed to load Ukrainian sprites:', error);
       }
     };
 

@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Application, extend, useTick } from '@pixi/react';
 import * as PIXI from 'pixi.js';
-import spriteUrl from './sprites/sprite.png';
-
 // Extend tells @pixi/react what Pixi.js components are available
 extend({
   Container: PIXI.Container,
@@ -17,24 +15,7 @@ const Graphics = 'Graphics' as any;
 const Sprite = 'Sprite' as any;
 const Text = 'Text' as any;
 
-// Helper: slice a 256x256 grid into textures in row-major order
-const sliceGrid256 = (baseTexture: PIXI.Texture, names: string[]) => {
-  const textures: Record<string, PIXI.Texture> = {};
-  names.forEach((name, idx) => {
-    const col = idx % 4;
-    const row = Math.floor(idx / 4);
-    textures[name] = new PIXI.Texture({
-      source: baseTexture.source,
-      frame: new PIXI.Rectangle(col * 256, row * 256, 256, 256)
-    });
-  });
-  return textures;
-};
-
-// Store loaded textures globally
-let loadedTextures: Record<string, PIXI.Texture> | null = null;
-
-const SYMBOLS = ['dragon_red', 'dragon_green', 'dragon_gold', 'dragon_blue', 'star', 'diamond', 'seven', 'bar', 'cherry', 'lemon', 'bell', 'spin'];
+const SYMBOLS = ['ukrainian1', 'ukrainian2', 'ukrainian3', 'ukrainian4', 'ukrainian5', 'ukrainian6'];
 
 interface MobileSpinningCellProps {
   x: number;
@@ -84,6 +65,13 @@ const MobileSpinningCell: React.FC<MobileSpinningCellProps> = ({
   });
 
   const currentSymbol = SYMBOLS[Math.floor(currentIndex)];
+  
+  // Debug: log current symbol during spinning
+  React.useEffect(() => {
+    if (isSpinning) {
+      console.log(`Cell (${x},${y}): currentSymbol=${currentSymbol}, index=${Math.floor(currentIndex)}`);
+    }
+  }, [currentSymbol, isSpinning, x, y, currentIndex]);
 
   return (
     <Container x={x} y={y}>
@@ -101,7 +89,13 @@ const MobileSpinningCell: React.FC<MobileSpinningCellProps> = ({
       
       {/* Sprite with mobile optimization */}
       <Sprite
-        texture={PIXI.Texture.from(currentSymbol)}
+        texture={(() => {
+          const texture = PIXI.Texture.from(currentSymbol);
+          if (isSpinning && Math.random() < 0.1) { // Occasional debug log during spinning
+            console.log(`Getting texture for ${currentSymbol}:`, texture, texture.valid);
+          }
+          return texture;
+        })()}
         anchor={0.5}
         scale={Math.max(0.2, (cellSize - 4) / 256)} // Minimal padding for mobile
         alpha={isSpinning ? 0.85 : 1.0}
@@ -125,9 +119,9 @@ const MobileSpinningGrid: React.FC<MobileSpinningGridProps> = ({
 }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [finalGrid, setFinalGrid] = useState<string[][]>([
-    ['cherry', 'lemon', 'bell'],
-    ['star', 'diamond', 'seven'],
-    ['dragon_red', 'dragon_green', 'dragon_gold']
+    ['ukrainian1', 'ukrainian2', 'ukrainian3'],
+    ['ukrainian4', 'ukrainian5', 'ukrainian6'],
+    ['ukrainian1', 'ukrainian2', 'ukrainian3']
   ]);
   const completedCells = useRef(0);
   

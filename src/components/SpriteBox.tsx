@@ -91,48 +91,41 @@ const SpriteBox: React.FC<SpriteBoxProps> = ({ currentSprite, size = 128 }) => {
   }
 
   return (
-    <div style={{ borderRadius: '8px', overflow: 'hidden', border: '2px solid #666' }}>
-      <Application 
-        width={size} 
-        height={size} 
-        backgroundColor={0x222222}
-        antialias={true}
-      >
-        <Container>
-          {/* Box background */}
-          <Graphics
-            draw={(g: any) => {
-              g.clear();
-              g.beginFill(0x333333);
-              g.drawRoundedRect(4, 4, size - 8, size - 8, 8);
-              g.endFill();
-              g.lineStyle(2, 0x666666);
-              g.drawRoundedRect(4, 4, size - 8, size - 8, 8);
-            }}
-          />
-          
-          {/* Sprite */}
-          {loadedTextures && loadedTextures[currentSprite] ? (
-            <Sprite
-              texture={loadedTextures[currentSprite]}
-              anchor={0.5}
-              x={size / 2}
-              y={size / 2}
-              scale={(size - 16) / 256} // Scale to fit in the box with some padding
-            />
-          ) : (
-            <Graphics
-              draw={(g: any) => {
-                g.clear();
-                g.beginFill(0xff0000);
-                g.drawCircle(size / 2, size / 2, 20);
-                g.endFill();
-              }}
-            />
-          )}
-        </Container>
-      </Application>
-    </div>
+    <Container>
+      {/* Box background */}
+      <Graphics
+        draw={(g: any) => {
+          g.clear();
+          g.beginFill(0x333333);
+          g.drawRoundedRect(0, 0, size, size, 8);
+          g.endFill();
+          g.lineStyle(2, 0x666666);
+          g.drawRoundedRect(0, 0, size, size, 8);
+        }}
+      />
+      
+      {/* Sprite */}
+      {loadedTextures && loadedTextures[currentSprite] ? (
+        <Sprite
+          texture={loadedTextures[currentSprite]}
+          anchor={0.5}
+          x={size / 2}
+          y={size / 2}
+          scale={Math.max(0.1, (size - 16) / 256)} // Scale to fit in the box with some padding
+        />
+      ) : (
+        <Graphics
+          draw={(g: any) => {
+            g.clear();
+            g.beginFill(0xff4444);
+            g.drawCircle(size / 2, size / 2, 20);
+            g.endFill();
+            g.lineStyle(2, 0xffffff);
+            g.drawCircle(size / 2, size / 2, 20);
+          }}
+        />
+      )}
+    </Container>
   );
 };
 

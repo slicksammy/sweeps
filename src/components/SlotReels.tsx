@@ -195,14 +195,7 @@ const SlotReels: React.FC<SlotReelsProps> = ({ isSpinning, onSpinComplete }) => 
   }
 
   return (
-    <div style={{ borderRadius: '12px', overflow: 'hidden' }}>
-      <Application 
-        width={300} 
-        height={300} 
-        backgroundColor={0x111111}
-        antialias={true}
-      >
-      <Container>
+    <Container>
         {/* Machine background */}
         <Graphics
           draw={(g: any) => {
@@ -229,9 +222,7 @@ const SlotReels: React.FC<SlotReelsProps> = ({ isSpinning, onSpinComplete }) => 
             />
           ))
         )}
-      </Container>
-      </Application>
-    </div>
+    </Container>
   );
 };
 

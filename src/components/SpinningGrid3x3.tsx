@@ -220,20 +220,7 @@ const SpinningGrid3x3: React.FC<SpinningGrid3x3Props> = ({
   }
 
   return (
-    <div style={{ 
-      borderRadius: '12px', 
-      overflow: 'hidden', 
-      border: `2px solid ${isSpinning ? '#ffaa00' : '#666'}`,
-      boxShadow: isSpinning ? '0 0 20px rgba(255, 170, 0, 0.5)' : 'none',
-      transition: 'all 0.3s ease'
-    }}>
-      <Application 
-        width={totalSize} 
-        height={totalSize} 
-        backgroundColor={isSpinning ? 0x0f0f0f : 0x111111}
-        antialias={true}
-      >
-        <Container>
+    <Container>
           {/* Grid background */}
           <Graphics
             draw={(g: any) => {
@@ -265,10 +252,8 @@ const SpinningGrid3x3: React.FC<SpinningGrid3x3Props> = ({
                 />
               );
             })
-          )}
-        </Container>
-      </Application>
-    </div>
+        )}
+    </Container>
   );
 };
 

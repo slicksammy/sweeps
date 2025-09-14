@@ -87,14 +87,7 @@ const SpriteGrid3x3: React.FC<SpriteGrid3x3Props> = ({ sprites, cellSize = 96 })
   }
 
   return (
-    <div style={{ borderRadius: '12px', overflow: 'hidden', border: '2px solid #666' }}>
-      <Application 
-        width={totalSize} 
-        height={totalSize} 
-        backgroundColor={0x111111}
-        antialias={true}
-      >
-        <Container>
+    <Container>
           {/* Grid background */}
           <Graphics
             draw={(g: any) => {
@@ -147,10 +140,8 @@ const SpriteGrid3x3: React.FC<SpriteGrid3x3Props> = ({ sprites, cellSize = 96 })
                 </Container>
               );
             })
-          )}
-        </Container>
-      </Application>
-    </div>
+        )}
+    </Container>
   );
 };
 

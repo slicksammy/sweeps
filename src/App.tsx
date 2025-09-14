@@ -1,12 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Application, extend } from '@pixi/react';
+import * as PIXI from 'pixi.js';
 import MobileSpinningGrid from './components/MobileSpinningGrid';
+import spriteUrl from './components/sprites/sprite.png';
 import './App.css';
+
+// Extend tells @pixi/react what Pixi.js components are available
+extend({
+  Container: PIXI.Container,
+  Graphics: PIXI.Graphics,
+  Sprite: PIXI.Sprite,
+  Text: PIXI.Text,
+});
+
+const Container = 'Container' as any;
+const Graphics = 'Graphics' as any;
+const Sprite = 'Sprite' as any;
+const Text = 'Text' as any;
 
 const sprites = ['dragon_red', 'dragon_green', 'dragon_gold', 'dragon_blue', 'star', 'diamond', 'seven', 'bar', 'cherry', 'lemon', 'bell', 'spin'];
 
+// Create sprite textures using proper PIXI v8 Assets system
+const createSpriteTextures = async () => {
+  // Load the base spritesheet through Assets system
+  const base = await PIXI.Assets.load(spriteUrl);
+  const baseTexture = base.baseTexture || base;
+
+  // Create sub-textures and register them with Assets for global access
+  const spriteDefinitions = [
+    { name: 'dragon_red', x: 0, y: 0 },
+    { name: 'dragon_green', x: 256, y: 0 },
+    { name: 'dragon_gold', x: 512, y: 0 },
+    { name: 'dragon_blue', x: 768, y: 0 },
+    { name: 'star', x: 0, y: 256 },
+    { name: 'diamond', x: 256, y: 256 },
+    { name: 'seven', x: 512, y: 256 },
+    { name: 'bar', x: 768, y: 256 },
+    { name: 'cherry', x: 0, y: 512 },
+    { name: 'lemon', x: 256, y: 512 },
+    { name: 'bell', x: 512, y: 512 },
+    { name: 'spin', x: 768, y: 512 }
+  ];
+
+  // Create and register each sprite texture
+  spriteDefinitions.forEach(({ name, x, y }) => {
+    const texture = new PIXI.Texture({
+      source: baseTexture.source,
+      frame: new PIXI.Rectangle(x, y, 256, 256)
+    });
+    // Register with Assets cache for global access
+    PIXI.Assets.cache.set(name, texture);
+  });
+
+  console.log('Sprite textures created and registered globally');
+};
+
 function App() {
-  const [mobileSpinPromise, setMobileSpinPromise] = useState<Promise<string[][]> | null>(null);
   const [lastMobileResult, setLastMobileResult] = useState<string[][] | null>(null);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [mobileSpinPromise, setMobileSpinPromise] = useState<Promise<string[][]> | null>(null);
+  const [texturesLoaded, setTexturesLoaded] = useState(false);
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  // Load textures using proper PIXI v8 Assets system
+  useEffect(() => {
+    const loadTextures = async () => {
+      try {
+        await createSpriteTextures();
+        setTexturesLoaded(true);
+      } catch (error) {
+        console.error('App: Failed to load textures:', error);
+      }
+    };
+
+    loadTextures();
+  }, []);
 
   const createSpinPromise = (delay: number = 1500) => {
     return new Promise<string[][]>((resolve) => {
@@ -46,7 +114,7 @@ function App() {
       gap: '30px'
     }}>
       <h1 style={{ 
-        fontSize: '32px', 
+        fontSize: 'clamp(24px, 6vw, 32px)', 
         marginBottom: '20px',
         textAlign: 'center',
         background: 'linear-gradient(45deg, #00aaff, #0088cc)',
@@ -57,12 +125,47 @@ function App() {
         🎰 Mobile Slot Machine
       </h1>
       
-      <MobileSpinningGrid 
-        spinPromise={mobileSpinPromise}
-        onSpinComplete={handleMobileSpinComplete}
-        containerWidth={320}
-        containerHeight={320}
-      />
+      {/* Simple fixed-size PIXI container */}
+      <div 
+        ref={parentRef}
+        style={{
+          width: '320px',
+          height: '320px',
+          border: '2px solid #333',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          backgroundColor: '#111'
+        }}
+      >
+        <Application 
+          width={320}
+          height={320}
+          backgroundColor={0x0a0a0a}
+          antialias={true}
+          resolution={1}
+        >
+          {texturesLoaded ? (
+            <MobileSpinningGrid 
+              spinPromise={mobileSpinPromise}
+              onSpinComplete={handleMobileSpinComplete}
+              containerWidth={320}
+              containerHeight={320}
+            />
+          ) : (
+            <Container x={200} y={200}>
+              <Text
+                text="Loading Sprites..."
+                style={new PIXI.TextStyle({
+                  fontSize: 24,
+                  fill: 0xFFFFFF,
+                  fontWeight: 'bold'
+                })}
+                anchor={0.5}
+              />
+            </Container>
+          )}
+        </Application>
+      </div>
       
       <button
         onClick={() => startMobileSpin(1000)}

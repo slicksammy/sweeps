@@ -49,7 +49,7 @@ const loadUkrainianSprites = async () => {
   // Test if Texture.from() works
   try {
     const testTexture = PIXI.Texture.from('ukrainian1');
-    console.log('Texture.from test successful:', testTexture.valid);
+    console.log('Texture.from test successful:', testTexture);
   } catch (error) {
     console.error('Texture.from test failed:', error);
   }
@@ -194,35 +194,6 @@ function App() {
       >
         {isSpinning ? 'SPINNING...' : 'Bet $5'}
       </button>
-      
-      {lastMobileResult && (
-        <div style={{ 
-          textAlign: 'center', 
-          maxWidth: '320px',
-          padding: '20px',
-          backgroundColor: 'rgba(0, 170, 255, 0.1)',
-          borderRadius: '12px',
-          border: '1px solid rgba(0, 170, 255, 0.3)'
-        }}>
-          <div style={{ 
-            color: '#00aaff', 
-            fontWeight: 'bold', 
-            marginBottom: '10px',
-            fontSize: '18px'
-          }}>
-            🎉 Last Result
-          </div>
-          {lastMobileResult.map((row, i) => (
-            <div key={i} style={{ 
-              marginBottom: '5px',
-              fontSize: '14px',
-              fontFamily: 'monospace'
-            }}>
-              {row.map(sprite => sprite.replace('_', ' ')).join(' • ')}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

@@ -92,7 +92,7 @@ const MobileSpinningCell: React.FC<MobileSpinningCellProps> = ({
         texture={(() => {
           const texture = PIXI.Texture.from(currentSymbol);
           if (isSpinning && Math.random() < 0.1) { // Occasional debug log during spinning
-            console.log(`Getting texture for ${currentSymbol}:`, texture, texture.valid);
+            console.log(`Getting texture for ${currentSymbol}:`, texture);
           }
           return texture;
         })()}

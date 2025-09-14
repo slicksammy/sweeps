@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SpriteBox from './components/SpriteBox';
 import SpriteGrid3x3 from './components/SpriteGrid3x3';
 import SpinningGrid3x3 from './components/SpinningGrid3x3';
+import MobileSpinningGrid from './components/MobileSpinningGrid';
 import './App.css';
 
 const sprites = ['dragon_red', 'dragon_green', 'dragon_gold', 'dragon_blue', 'star', 'diamond', 'seven', 'bar', 'cherry', 'lemon', 'bell', 'spin'];
@@ -15,7 +16,9 @@ function App() {
     ['dragon_red', 'dragon_green', 'dragon_gold']
   ]);
   const [spinPromise, setSpinPromise] = useState<Promise<string[][]> | null>(null);
+  const [mobileSpinPromise, setMobileSpinPromise] = useState<Promise<string[][]> | null>(null);
   const [lastSpinResult, setLastSpinResult] = useState<string[][] | null>(null);
+  const [lastMobileResult, setLastMobileResult] = useState<string[][] | null>(null);
 
   useEffect(() => {
     if (autoChange) {
@@ -64,6 +67,20 @@ function App() {
     console.log('Spin completed with result:', result);
   };
 
+  const startMobileSpin = (delay: number = 1500) => {
+    const promise = createSpinPromise(delay);
+    setMobileSpinPromise(promise);
+    
+    setTimeout(() => {
+      setMobileSpinPromise(null);
+    }, delay + 1000);
+  };
+
+  const handleMobileSpinComplete = (result: string[][]) => {
+    setLastMobileResult(result);
+    console.log('Mobile spin completed with result:', result);
+  };
+
   return (
     <div className="App" style={{ 
       padding: '20px', 
@@ -77,7 +94,7 @@ function App() {
     }}>
       <h1>Sprite Components Test</h1>
       
-      <div style={{ display: 'flex', gap: '30px', alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
           <h2>Single Sprite Box</h2>
           <SpriteBox currentSprite={currentSprite} size={150} />
@@ -195,6 +212,68 @@ function App() {
               </div>
             ) : (
               <div>No spins yet</div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+          <h2>Mobile Grid</h2>
+          <MobileSpinningGrid 
+            spinPromise={mobileSpinPromise}
+            onSpinComplete={handleMobileSpinComplete}
+            containerWidth={280}
+            containerHeight={280}
+          />
+          
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => startMobileSpin(1000)}
+              style={{
+                padding: '12px 18px',
+                backgroundColor: '#00aaff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                minWidth: '90px'
+              }}
+            >
+              Quick Spin
+            </button>
+            <button
+              onClick={() => startMobileSpin(2000)}
+              style={{
+                padding: '12px 18px',
+                backgroundColor: '#0088cc',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                minWidth: '90px'
+              }}
+            >
+              Long Spin
+            </button>
+          </div>
+          
+          <div style={{ fontSize: '12px', textAlign: 'center', maxWidth: '280px' }}>
+            {lastMobileResult ? (
+              <div>
+                <div style={{ color: '#00aaff', fontWeight: 'bold', marginBottom: '5px' }}>
+                  📱 Mobile Result:
+                </div>
+                {lastMobileResult.map((row, i) => (
+                  <div key={i} style={{ marginBottom: '2px' }}>
+                    {row.map(sprite => sprite.replace('_', ' ')).join(' • ')}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ color: '#666' }}>No mobile spins yet</div>
             )}
           </div>
         </div>

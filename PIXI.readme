@@ -1,0 +1,247 @@
+ChatGPT said:
+
+Here’s a structured write-up of PixiJS v8 (from its docs), covering its core architecture, API, usage patterns, and gotchas. You can feed this into your LLM reference so it can help you build Pixi apps more reliably.
+
+Overview & Architecture
+
+PixiJS is a high-performance 2D rendering library for the web. It supports WebGL (primary), WebGPU, and fallback Canvas renderers. 
+pixijs.download
++2
+PixiJS
++2
+
+It’s meant for interactive graphics, games, data visualizations, etc., abstracting away low-level details while still giving you control. 
+pixijs.download
++1
+
+Key architectural pieces:
+
+Component	Role
+Renderer	Does the actual drawing (WebGL, WebGPU, or Canvas). Handles pipeline, textures, etc. 
+PixiJS
++1
+
+Scene Graph	A tree of display objects: Containers, Sprites, Graphics, Meshes, Text, etc. These define what’s drawn and how. Transform hierarchies, positioning, etc. 
+pixijs.download
++2
+PixiJS
++2
+
+Assets	Loading, caching, resolving and managing resources (textures, fonts, JSON, etc.). 
+PixiJS
++1
+
+Application	A wrapper that sets up renderer, stage (root container), ticker (frame loop), resize etc. Useful for bootstrapping your app. 
+pixijs.download
++2
+PixiJS
++2
+
+Ticker	Manages per-frame callbacks; the animation/game loop. 
+PixiJS
++2
+pixijs.download
++2
+
+Extensions System	Modular architecture; many features are extensions (e.g. filters, interaction, etc.). You can customize which you include for bundle size, functionality etc. 
+PixiJS
++1
+Getting Started
+
+Here’s how one typically starts a PixiJS v8 app:
+
+Install & import
+Use npm install pixi.js or via CDN. Import what you need:
+
+import { Application, Assets, Sprite } from 'pixi.js';
+
+
+Create & init the Application
+You no longer pass options into the constructor (mostly) in v8. Instead you do:
+
+const app = new Application();
+await app.init({
+  width: 800,
+  height: 600,
+  backgroundColor: 0x1099bb,
+  antialias: true,
+  // other options...
+});
+
+
+After init, you can append app.canvas (the DOM canvas) to the DOM. 
+pixijs.download
++2
+PixiJS
++2
+
+Load assets using the Assets system. Very promise-based / async await style. Then create Sprites or other display objects. 
+PixiJS
++2
+PixiJS
++2
+
+Add to scene graph: Add objects to app.stage, position them, etc. Transform, scale, anchor etc. 
+PixiJS
++1
+
+Animate / update with ticker: Use app.ticker (or custom ticker) to update things per frame: movement, user input, etc. 
+PixiJS
++1
+
+Clean up: When done, call app.destroy() with appropriate options to clean up resources, context, etc. 
+pixijs.download
++1
+
+Key APIs & Components
+
+Here are some of the main classes, what they do, how to use them.
+
+API / Class	Purpose	Important Methods / Properties	Notes / Gotchas
+Application	Sets up the renderer, stage, ticker, resizing. Entry point. 
+pixijs.download
++2
+PixiJS
++2
+	.init(options), .destroy(...), app.stage, app.renderer, app.screen, app.canvas, ticker, resizeTo, etc. 
+pixijs.download
++1
+	Must await init() before using many parts. Options include preference WebGL / WebGPU, background, etc. Auto resize behavior, shared vs private ticker, etc.
+Assets	Load+manage external resources: textures, fonts, JSON, etc. Caching, aliasing, bundles. 
+PixiJS
+	Assets.init(...), Assets.load(...), Assets.get(...), Assets.unload(...), custom parsers/resolvers. 
+PixiJS
+	If you use certain asset types (e.g. bitmap fonts), make sure related extensions are included. Unload frees memory. Re-loads are cached. Be mindful of file types, performance of big resources.
+Sprite	Basic image display. Use with a Texture. 
+PixiJS
+	The constructor takes a texture; properties like anchor, position, scale, rotation, width/height etc. Supports updating texture. 
+PixiJS
+	If you change texture, width/height or scale behave relative to the new texture. Anchors useful for centering or rotation.
+Graphics	Drawing primitives (shapes, lines, fills). 
+PixiJS
+	Methods to build shapes, stroke, fill. New v8 encourages shape building then stroke/fill (order changed). 
+PixiJS
++1
+	Be careful: performance with lots of graphics can be expensive. Some deprecations in v8: older patterns of fill/stroke sequences changed.
+Containers	Grouping display objects. Nested transforms, masking, etc.	AddChild / removeChild, transforms, etc. Inherited by Sprite, Graphics, etc. 
+pixijs.download
++1
+	Important for organizing scene graph, applying global transforms, culling, etc.
+Text / BitmapText	Display text. Bitmap fonts and web fonts.	Usual properties: style, font size, alignment, etc. Bitmap vs dynamic text. │ Be aware: Font loading may require asset support; extension imports needed for bitmap fonts etc.	
+Renderers	WebGL / WebGPU / Canvas backends. They are internal to Application but you can access rendering features via app.renderer.	Renderer options via ApplicationOptions, rendering to RenderTextures, etc. 
+PixiJS
++1
+	WebGPU is newer—some features may lag or differ. Also performance trade-offs: antialiasing, resolution, etc.
+Filters / Blend Modes	Effects you can apply to display objects or render pipelines: blur, color effects, etc. Blend modes for compositing.	Using built-in filters, or custom shaders; setting blendMode etc. 
+PixiJS
+	Filters can be expensive; overuse can harm performance. Be conscious of device capabilities. Blend modes may have different behavior depending on renderer.
+Events / Interaction	Handling user input: mouse, touch, pointer events. Hit testing, interactive objects.	Properties like interactive, buttonMode, event listeners (pointerdown, pointermove, etc.). 
+pixijs.download
+	Scene graph order affects hit testing; performance considerations for many interactive objects.
+Migration & Breaking Changes (v7 → v8)
+
+Since version 8 introduces several changes, worth being aware of them if you’re updating or reading code expecting older behavior. 
+PixiJS
+
+One-package structure: Previously PixiJS was split into sub-packages (e.g. @pixi/app, @pixi/sprite). Now it's all under pixi.js. 
+PixiJS
+
+Async initialization: You must await app.init(...) instead of passing options in the constructor. 
+pixijs.download
++1
+
+Textures load responsibilities changed: Textures no longer handle loading of their resource. You must use Assets (or other loaders) to fetch the source. Textures expect fully loaded sources. 
+PixiJS
+
+Graphics API changes: The order and style of building fill/stroke changed. Some methods deprecated; more explicit API. 
+PixiJS
+
+Container culling changed: More control, user must manage in many cases. 
+PixiJS
+
+Extensions import / tree shaking: You can disable default extension auto imports and manually import what you need to reduce size. 
+PixiJS
+
+Performance Tips & Best Practices
+
+To build Pixi apps that run well:
+
+Batch where possible: Use sprite sheets / texture atlases / texture packing to reduce texture switches.
+
+Minimize use of expensive filters or shaders, especially over large screen areas.
+
+Use culling to avoid drawing objects outside the viewport.
+
+Be careful with large numbers of particles or meshes; use ParticleContainer when many Sprites with similar style / texture.
+
+Manage texture lifecycles; unload textures you’re not using to free GPU memory.
+
+Use proper resolution settings, especially for high-DPI screens (resolution option in Application).
+
+Be aware of how frequent resizing happens; debouncing or throttling may help.
+
+Typical App Structure (Suggested)
+
+This is a pattern / skeleton you could follow, which your LLM can use to scaffold real apps:
+
+import { Application, Assets, Sprite, Ticker } from 'pixi.js';
+
+async function createApp(opts) {
+  const app = new Application();
+  await app.init({
+    width: opts.width || 800,
+    height: opts.height || 600,
+    backgroundColor: opts.backgroundColor || 0x000000,
+    resizeTo: opts.resizeTo || window,
+    antialias: true,
+    // other options as needed
+  });
+
+  document.body.appendChild(app.canvas);
+
+  // Load assets
+  await Assets.init({ /* optional configuration */ });
+  const assets = await Assets.load({
+    hero: 'assets/hero.png',
+    enemy: 'assets/enemy.png',
+    font: 'assets/font.fnt',
+    // other assets
+  });
+
+  // Create scene objects
+  const hero = new Sprite(assets.hero);
+  hero.anchor.set(0.5);
+  hero.position.set(app.screen.width / 2, app.screen.height / 2);
+  app.stage.addChild(hero);
+
+  // Setup interactivity, filters etc.
+
+  // Game loop
+  app.ticker.add((tick) => {
+    // tick.deltaTime, tick.deltaMS etc.
+    updateHero(hero, tick.deltaTime);
+    // other updates
+  });
+
+  return app;
+}
+
+// usage
+createApp({ width: 1024, height: 768, backgroundColor: 0x1099ff });
+
+Gotchas & Edge Cases
+
+If using bitmap fonts or some asset types before initialization, ensure the necessary extension is imported. Otherwise load may fail. 
+PixiJS
+
+WebGPU is newer; behaviors or performance might differ across browsers. Test both if you allow preference.
+
+If you modify a texture’s frame or UVs after create, you might need to manually notify or update the sprite via sprite.onViewUpdate() etc. Automatic updates are not always guaranteed. 
+PixiJS
+
+Destroying: unless you call .destroy() correctly with all options, you may leak GPU memory (textures, WebGL contexts).
+
+Interaction / hit testing: many overlapping interactive objects can degrade performance; structure scene for efficient culling / hit testing.
+
+If you like, I can convert this into a canonical spec/reference document (e.g. with sections, definitions etc.) that your LLM can ingest. Do you want me to prepare that?
+

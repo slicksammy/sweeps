@@ -1,31 +1,52 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { Application, extend, useTick } from '@pixi/react';
 import * as PIXI from 'pixi.js';
+import spriteUrl from './sprites/sprite.png';
+console.log(spriteUrl);
 
 // Extend tells @pixi/react what Pixi.js components are available
 extend({
   Container: PIXI.Container,
   Graphics: PIXI.Graphics,
   Text: PIXI.Text,
+  Sprite: PIXI.Sprite,
 });
 
 // Now we can use these as JSX components
 const Container = 'Container' as any;
 const Graphics = 'Graphics' as any;
 const Text = 'Text' as any;
+const Sprite = 'Sprite' as any;
 
-// Slot symbols
-const SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'];
+// Slot symbols - now using sprite names instead of emoji
+const SYMBOLS = ['cherry', 'lemon', 'bell', 'bar', 'star', 'diamond', 'seven', 'dragon_red'];
 const SYMBOL_VALUES = {
-  '🍒': 2,
-  '🍋': 3,
-  '🍊': 4,
-  '🍇': 5,
-  '⭐': 10,
-  '💎': 15,
-  '🔔': 20,
-  '7️⃣': 50
+  'cherry': 2,
+  'lemon': 3,
+  'bell': 4,
+  'bar': 5,
+  'star': 10,
+  'diamond': 15,
+  'seven': 20,
+  'dragon_red': 50
 };
+
+// Helper: slice a 256x256 grid into textures in row-major order
+const sliceGrid256 = (baseTexture: PIXI.Texture, names: string[]) => {
+  const textures: Record<string, PIXI.Texture> = {};
+  names.forEach((name, idx) => {
+    const col = idx % 4;
+    const row = Math.floor(idx / 4);
+    textures[name] = new PIXI.Texture({
+      source: baseTexture.source,
+      frame: new PIXI.Rectangle(col * 256, row * 256, 256, 256)
+    });
+  });
+  return textures;
+};
+
+// Store loaded textures globally
+let loadedTextures: Record<string, PIXI.Texture> | null = null;
 
 interface ReelProps {
   x: number;
@@ -71,6 +92,8 @@ const Reel: React.FC<ReelProps> = ({ x, symbols, isSpinning, onSpinComplete, spi
     }
   });
 
+  const currentSymbol = symbols[Math.floor(currentIndex)];
+
   return (
     <Container x={x} y={200}>
       {/* Reel background */}
@@ -78,23 +101,21 @@ const Reel: React.FC<ReelProps> = ({ x, symbols, isSpinning, onSpinComplete, spi
         draw={(g: any) => {
           g.clear();
           g.beginFill(0x333333);
-          g.drawRoundedRect(-40, -60, 80, 120, 10);
+          g.drawRoundedRect(-64, -64, 128, 128, 10);
           g.endFill();
           g.lineStyle(2, 0x666666);
-          g.drawRoundedRect(-40, -60, 80, 120, 10);
+          g.drawRoundedRect(-64, -64, 128, 128, 10);
         }}
       />
       
-      {/* Symbol display */}
-      <Text
-        text={symbols[Math.floor(currentIndex)]}
-        style={new PIXI.TextStyle({
-          fontSize: 48,
-          fill: 0xFFFFFF,
-          align: 'center'
-        })}
-        anchor={0.5}
-      />
+      {/* Symbol sprite */}
+      {loadedTextures && loadedTextures[currentSymbol] && (
+        <Sprite
+          texture={loadedTextures[currentSymbol]}
+          anchor={0.5}
+          scale={0.5}
+        />
+      )}
     </Container>
   );
 };
@@ -108,10 +129,33 @@ interface SlotMachineProps {
 
 const SlotMachine: React.FC<SlotMachineProps> = ({ balance, bet, onBalanceChange, onWin }) => {
   const [isSpinning, setIsSpinning] = useState(false);
-  const [reelResults, setReelResults] = useState<string[]>(['🍒', '🍒', '🍒']);
+  const [reelResults, setReelResults] = useState<string[]>(['cherry', 'cherry', 'cherry']);
   const [lastWin, setLastWin] = useState(0);
+  const [texturesLoaded, setTexturesLoaded] = useState(false);
   const completedReels = useRef(0);
   const spinButtonRef = useRef<any>(null);
+
+  // Load textures when component mounts
+  useEffect(() => {
+    const loadTextures = async () => {
+      try {
+        const baseTexture = await PIXI.Assets.load(spriteUrl); // Texture
+
+        const names = [
+          'dragon_red','dragon_green','dragon_gold','dragon_blue',
+          'star','diamond','seven','bar',
+          'cherry','lemon','bell','spin'
+        ];
+
+        loadedTextures = sliceGrid256(baseTexture, names);
+        setTexturesLoaded(true);
+      } catch (error) {
+        console.error('Failed to load textures:', error);
+      }
+    };
+
+    loadTextures();
+  }, []);
 
   const handleReelComplete = useCallback((symbol: string, reelIndex: number) => {
     setReelResults(prev => {
@@ -155,8 +199,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ balance, bet, onBalanceChange
 
   const handleSpin = useCallback(() => {
     console.log('Spin button clicked!', { isSpinning, balance, bet });
-    if (isSpinning || balance < bet) {
-      console.log('Spin blocked:', { isSpinning, balance, bet });
+    if (isSpinning || balance < bet || !texturesLoaded) {
+      console.log('Spin blocked:', { isSpinning, balance, bet, texturesLoaded });
       return;
     }
     
@@ -164,7 +208,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ balance, bet, onBalanceChange
     setIsSpinning(true);
     setLastWin(0);
     onBalanceChange(balance - bet);
-  }, [isSpinning, balance, bet, onBalanceChange]);
+  }, [isSpinning, balance, bet, onBalanceChange, texturesLoaded]);
 
   // Set up event listener for spin button
   useEffect(() => {
@@ -189,10 +233,10 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ balance, bet, onBalanceChange
         draw={(g: any) => {
           g.clear();
           g.beginFill(0x1a1a1a);
-          g.drawRoundedRect(50, 100, 500, 300, 20);
+          g.drawRoundedRect(50, 50, 500, 350, 20);
           g.endFill();
           g.lineStyle(4, 0x444444);
-          g.drawRoundedRect(50, 100, 500, 300, 20);
+          g.drawRoundedRect(50, 50, 500, 350, 20);
         }}
       />
 
@@ -206,32 +250,51 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ balance, bet, onBalanceChange
           align: 'center'
         })}
         x={300}
-        y={120}
+        y={80}
         anchor={0.5}
       />
 
+      {/* Loading indicator */}
+      {!texturesLoaded && (
+        <Text
+          text="Loading sprites..."
+          style={new PIXI.TextStyle({
+            fontSize: 18,
+            fill: 0xFFFFFF,
+            align: 'center'
+          })}
+          x={300}
+          y={200}
+          anchor={0.5}
+        />
+      )}
+
       {/* Reels */}
-      <Reel
-        x={150}
-        symbols={SYMBOLS}
-        isSpinning={isSpinning}
-        onSpinComplete={(symbol) => handleReelComplete(symbol, 0)}
-        spinDuration={60 + Math.random() * 30}
-      />
-      <Reel
-        x={300}
-        symbols={SYMBOLS}
-        isSpinning={isSpinning}
-        onSpinComplete={(symbol) => handleReelComplete(symbol, 1)}
-        spinDuration={80 + Math.random() * 30}
-      />
-      <Reel
-        x={450}
-        symbols={SYMBOLS}
-        isSpinning={isSpinning}
-        onSpinComplete={(symbol) => handleReelComplete(symbol, 2)}
-        spinDuration={100 + Math.random() * 30}
-      />
+      {texturesLoaded && (
+        <>
+          <Reel
+            x={150}
+            symbols={SYMBOLS}
+            isSpinning={isSpinning}
+            onSpinComplete={(symbol) => handleReelComplete(symbol, 0)}
+            spinDuration={60 + Math.random() * 30}
+          />
+          <Reel
+            x={300}
+            symbols={SYMBOLS}
+            isSpinning={isSpinning}
+            onSpinComplete={(symbol) => handleReelComplete(symbol, 1)}
+            spinDuration={80 + Math.random() * 30}
+          />
+          <Reel
+            x={450}
+            symbols={SYMBOLS}
+            isSpinning={isSpinning}
+            onSpinComplete={(symbol) => handleReelComplete(symbol, 2)}
+            spinDuration={100 + Math.random() * 30}
+          />
+        </>
+      )}
 
       {/* Win display */}
       {lastWin > 0 && (
@@ -260,7 +323,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ balance, bet, onBalanceChange
         <Graphics
           draw={(g: any) => {
             g.clear();
-            if (isSpinning || balance < bet) {
+            if (isSpinning || balance < bet || !texturesLoaded) {
               g.beginFill(0x666666);
             } else {
               g.beginFill(0xFF4444);
@@ -273,7 +336,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ balance, bet, onBalanceChange
         />
         
         <Text
-          text={isSpinning ? "SPINNING..." : "SPIN"}
+          text={isSpinning ? "SPINNING..." : !texturesLoaded ? "LOADING..." : "SPIN"}
           style={new PIXI.TextStyle({
             fontSize: 16,
             fill: 0xFFFFFF,
@@ -399,9 +462,10 @@ const SlotGame: React.FC<SlotGameProps> = () => {
             <div key={symbol} style={{ 
               padding: '5px',
               backgroundColor: '#333',
-              borderRadius: '5px'
+              borderRadius: '5px',
+              textTransform: 'capitalize'
             }}>
-              {symbol} = {value}x
+              {symbol.replace('_', ' ')} = {value}x
             </div>
           ))}
         </div>

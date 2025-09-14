@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SpriteBox from './components/SpriteBox';
 import SpriteGrid3x3 from './components/SpriteGrid3x3';
+import SpinningGrid3x3 from './components/SpinningGrid3x3';
 import './App.css';
 
 const sprites = ['dragon_red', 'dragon_green', 'dragon_gold', 'dragon_blue', 'star', 'diamond', 'seven', 'bar', 'cherry', 'lemon', 'bell', 'spin'];
@@ -13,6 +14,8 @@ function App() {
     ['star', 'diamond', 'seven'],
     ['dragon_red', 'dragon_green', 'dragon_gold']
   ]);
+  const [spinPromise, setSpinPromise] = useState<Promise<string[][]> | null>(null);
+  const [lastSpinResult, setLastSpinResult] = useState<string[][] | null>(null);
 
   useEffect(() => {
     if (autoChange) {
@@ -35,6 +38,32 @@ function App() {
     setGrid3x3(newGrid);
   };
 
+  const createSpinPromise = (delay: number = 2000) => {
+    return new Promise<string[][]>((resolve) => {
+      setTimeout(() => {
+        const newGrid = Array(3).fill(null).map(() => 
+          Array(3).fill(null).map(() => sprites[Math.floor(Math.random() * sprites.length)])
+        );
+        resolve(newGrid);
+      }, delay);
+    });
+  };
+
+  const startSpin = (delay: number = 2000) => {
+    const promise = createSpinPromise(delay);
+    setSpinPromise(promise);
+    
+    // Reset promise after a short delay to allow for new spins
+    setTimeout(() => {
+      setSpinPromise(null);
+    }, delay + 1000);
+  };
+
+  const handleSpinComplete = (result: string[][]) => {
+    setLastSpinResult(result);
+    console.log('Spin completed with result:', result);
+  };
+
   return (
     <div className="App" style={{ 
       padding: '20px', 
@@ -48,7 +77,7 @@ function App() {
     }}>
       <h1>Sprite Components Test</h1>
       
-      <div style={{ display: 'flex', gap: '40px', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', gap: '30px', alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
           <h2>Single Sprite Box</h2>
           <SpriteBox currentSprite={currentSprite} size={150} />
@@ -114,6 +143,59 @@ function App() {
                 {row.map(sprite => sprite.replace('_', ' ')).join(' | ')}
               </div>
             ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+          <h2>Spinning Grid</h2>
+          <SpinningGrid3x3 
+            spinPromise={spinPromise} 
+            cellSize={70}
+            onSpinComplete={handleSpinComplete}
+          />
+          
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => startSpin(1500)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#ff6600',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              Quick Spin (1.5s)
+            </button>
+            <button
+              onClick={() => startSpin(3000)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#cc4400',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              Long Spin (3s)
+            </button>
+          </div>
+          
+          <div style={{ fontSize: '12px', textAlign: 'center', maxWidth: '200px' }}>
+            {lastSpinResult ? (
+              <div>
+                Last result:
+                {lastSpinResult.map((row, i) => (
+                  <div key={i}>
+                    {row.map(sprite => sprite.replace('_', ' ')).join(' | ')}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div>No spins yet</div>
+            )}
           </div>
         </div>
       </div>

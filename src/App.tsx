@@ -88,6 +88,9 @@ function App() {
   };
 
   const startMobileSpin = (delay: number = 1500) => {
+    if (isSpinning) return; // Prevent multiple spins
+    
+    setIsSpinning(true);
     const promise = createSpinPromise(delay);
     setMobileSpinPromise(promise);
     
@@ -98,6 +101,7 @@ function App() {
 
   const handleMobileSpinComplete = (result: string[][]) => {
     setLastMobileResult(result);
+    setIsSpinning(false); // Re-enable button
     console.log('Mobile spin completed with result:', result);
   };
 
@@ -169,24 +173,26 @@ function App() {
       
       <button
         onClick={() => startMobileSpin(1000)}
+        disabled={isSpinning}
         style={{
           padding: '15px 25px',
-          backgroundColor: '#00aaff',
+          backgroundColor: isSpinning ? '#666666' : '#00aaff',
           color: 'white',
           border: 'none',
           borderRadius: '12px',
-          cursor: 'pointer',
+          cursor: isSpinning ? 'not-allowed' : 'pointer',
           fontSize: '16px',
           fontWeight: 'bold',
           minWidth: '120px',
-          boxShadow: '0 4px 15px rgba(0, 170, 255, 0.3)',
-          transition: 'all 0.2s ease'
+          boxShadow: isSpinning ? '0 2px 8px rgba(102, 102, 102, 0.3)' : '0 4px 15px rgba(0, 170, 255, 0.3)',
+          transition: 'all 0.2s ease',
+          opacity: isSpinning ? 0.7 : 1.0
         }}
-        onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
-        onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        onMouseDown={(e) => !isSpinning && (e.currentTarget.style.transform = 'scale(0.95)')}
+        onMouseUp={(e) => !isSpinning && (e.currentTarget.style.transform = 'scale(1)')}
+        onMouseLeave={(e) => !isSpinning && (e.currentTarget.style.transform = 'scale(1)')}
       >
-        Bet $5
+        {isSpinning ? 'SPINNING...' : 'Bet $5'}
       </button>
       
       {lastMobileResult && (

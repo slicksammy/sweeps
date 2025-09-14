@@ -117,17 +117,6 @@ function App() {
       justifyContent: 'center',
       gap: '30px'
     }}>
-      <h1 style={{ 
-        fontSize: 'clamp(24px, 6vw, 32px)', 
-        marginBottom: '20px',
-        textAlign: 'center',
-        background: 'linear-gradient(45deg, #00aaff, #0088cc)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text'
-      }}>
-        🎰 Mobile Slot Machine
-      </h1>
       
       {/* Simple fixed-size PIXI container */}
       <div 

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { Application, extend, useTick } from '@pixi/react';
 import * as PIXI from 'pixi.js';
 
@@ -111,6 +111,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ balance, bet, onBalanceChange
   const [reelResults, setReelResults] = useState<string[]>(['🍒', '🍒', '🍒']);
   const [lastWin, setLastWin] = useState(0);
   const completedReels = useRef(0);
+  const spinButtonRef = useRef<any>(null);
 
   const handleReelComplete = useCallback((symbol: string, reelIndex: number) => {
     setReelResults(prev => {
@@ -153,12 +154,33 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ balance, bet, onBalanceChange
   }, [reelResults, bet, balance, onBalanceChange, onWin]);
 
   const handleSpin = useCallback(() => {
-    if (isSpinning || balance < bet) return;
+    console.log('Spin button clicked!', { isSpinning, balance, bet });
+    if (isSpinning || balance < bet) {
+      console.log('Spin blocked:', { isSpinning, balance, bet });
+      return;
+    }
     
+    console.log('Starting spin...');
     setIsSpinning(true);
     setLastWin(0);
     onBalanceChange(balance - bet);
   }, [isSpinning, balance, bet, onBalanceChange]);
+
+  // Set up event listener for spin button
+  useEffect(() => {
+    if (spinButtonRef.current) {
+      const button = spinButtonRef.current;
+      button.on('pointerdown', handleSpin);
+      button.on('click', handleSpin);
+      button.on('tap', handleSpin);
+      
+      return () => {
+        button.off('pointerdown', handleSpin);
+        button.off('click', handleSpin);
+        button.off('tap', handleSpin);
+      };
+    }
+  }, [handleSpin]);
 
   return (
     <Container>
@@ -228,38 +250,39 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ balance, bet, onBalanceChange
       )}
 
       {/* Spin button */}
-      <Graphics
+      <Container
+        ref={spinButtonRef}
         x={300}
         y={380}
         interactive={true}
         cursor="pointer"
-        pointerdown={handleSpin}
-        draw={(g: any) => {
-          g.clear();
-          if (isSpinning || balance < bet) {
-            g.beginFill(0x666666);
-          } else {
-            g.beginFill(0xFF4444);
-          }
-          g.drawCircle(0, 0, 40);
-          g.endFill();
-          g.lineStyle(3, 0xFFFFFF);
-          g.drawCircle(0, 0, 40);
-        }}
-      />
-      
-      <Text
-        text={isSpinning ? "SPINNING..." : "SPIN"}
-        style={new PIXI.TextStyle({
-          fontSize: 16,
-          fill: 0xFFFFFF,
-          fontWeight: 'bold',
-          align: 'center'
-        })}
-        x={300}
-        y={380}
-        anchor={0.5}
-      />
+      >
+        <Graphics
+          draw={(g: any) => {
+            g.clear();
+            if (isSpinning || balance < bet) {
+              g.beginFill(0x666666);
+            } else {
+              g.beginFill(0xFF4444);
+            }
+            g.drawCircle(0, 0, 40);
+            g.endFill();
+            g.lineStyle(3, 0xFFFFFF);
+            g.drawCircle(0, 0, 40);
+          }}
+        />
+        
+        <Text
+          text={isSpinning ? "SPINNING..." : "SPIN"}
+          style={new PIXI.TextStyle({
+            fontSize: 16,
+            fill: 0xFFFFFF,
+            fontWeight: 'bold',
+            align: 'center'
+          })}
+          anchor={0.5}
+        />
+      </Container>
     </Container>
   );
 };

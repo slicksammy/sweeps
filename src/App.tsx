@@ -8,6 +8,8 @@ import sprite3 from './components/sprites/UkrainianSprites/3.png';
 import sprite4 from './components/sprites/UkrainianSprites/4.png';
 import sprite5 from './components/sprites/UkrainianSprites/5.png';
 import sprite6 from './components/sprites/UkrainianSprites/6.png';
+import sprite7 from './components/sprites/UkrainianSprites/7.png';
+import sprite8 from './components/sprites/UkrainianSprites/8.png';
 import './App.css';
 
 // Extend tells @pixi/react what Pixi.js components are available
@@ -23,7 +25,7 @@ const Graphics = 'Graphics' as any;
 const Sprite = 'Sprite' as any;
 const Text = 'Text' as any;
 
-const sprites = ['ukrainian1', 'ukrainian2', 'ukrainian3', 'ukrainian4', 'ukrainian5', 'ukrainian6'];
+const sprites = ['ukrainian1', 'ukrainian2', 'ukrainian3', 'ukrainian4', 'ukrainian5', 'ukrainian6', 'ukrainian7', 'ukrainian8'];
 
 // Load Ukrainian sprites using proper PIXI v8 Assets system
 const loadUkrainianSprites = async () => {
@@ -33,7 +35,9 @@ const loadUkrainianSprites = async () => {
     { name: 'ukrainian3', url: sprite3 },
     { name: 'ukrainian4', url: sprite4 },
     { name: 'ukrainian5', url: sprite5 },
-    { name: 'ukrainian6', url: sprite6 }
+    { name: 'ukrainian6', url: sprite6 },
+    { name: 'ukrainian7', url: sprite7 },
+    { name: 'ukrainian8', url: sprite8 }
   ];
 
   // Load each sprite individually and register with Assets cache

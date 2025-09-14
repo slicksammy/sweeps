@@ -15,7 +15,7 @@ const Graphics = 'Graphics' as any;
 const Sprite = 'Sprite' as any;
 const Text = 'Text' as any;
 
-const SYMBOLS = ['ukrainian1', 'ukrainian2', 'ukrainian3', 'ukrainian4', 'ukrainian5', 'ukrainian6'];
+const SYMBOLS = ['ukrainian1', 'ukrainian2', 'ukrainian3', 'ukrainian4', 'ukrainian5', 'ukrainian6', 'ukrainian7'];
 
 interface MobileSpinningCellProps {
   x: number;
